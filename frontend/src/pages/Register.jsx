@@ -14,7 +14,7 @@ export default function Register() {
     confirmPassword: '',
   })
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError]     = useState('')
+  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({})
 
@@ -26,11 +26,11 @@ export default function Register() {
 
   const validate = () => {
     const errors = {}
-    if (!form.name.trim())          errors.name = 'Full name is required'
-    if (!form.email.trim())         errors.email = 'Email is required'
-    if (form.password.length < 6)   errors.password = 'Password must be at least 6 characters'
+    if (!form.name.trim()) errors.name = 'Full name is required'
+    if (!form.email.trim()) errors.email = 'Email is required'
+    if (form.password.length < 6) errors.password = 'Password must be at least 6 characters'
     if (form.password !== form.confirmPassword)
-                                    errors.confirmPassword = 'Passwords do not match'
+      errors.confirmPassword = 'Passwords do not match'
     return errors
   }
 
@@ -86,7 +86,7 @@ export default function Register() {
         <div className="auth-card">
 
           <div className="auth-header">
-            <span className="auth-label">✦ Create Account</span>
+            <span className="auth-label">Create Account</span>
             <h1>Register your account</h1>
             <p>Fill in your details to get started</p>
           </div>

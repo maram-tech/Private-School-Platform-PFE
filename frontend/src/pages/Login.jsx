@@ -66,7 +66,7 @@ export default function Login() {
         <div className="auth-card">
 
           <div className="auth-header">
-            <span className="auth-label">✦ Sign In</span>
+            <span className="auth-label">Sign In</span>
             <h1>Log in to your account</h1>
             <p>Enter your credentials to access the platform</p>
           </div>
