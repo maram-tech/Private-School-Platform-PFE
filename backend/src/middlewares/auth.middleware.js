@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken')
 
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_jwt_secret_change_me'
+
 const protect = (req, res, next) => {
   const authHeader = req.headers.authorization
 
@@ -10,7 +12,7 @@ const protect = (req, res, next) => {
   const token = authHeader.split(' ')[1]
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    const decoded = jwt.verify(token, JWT_SECRET)
     req.user = decoded // { id, email, role }
     next()
   } catch (err) {
@@ -18,4 +20,18 @@ const protect = (req, res, next) => {
   }
 }
 
-module.exports = { protect }
+const authorize = (...allowedRoles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Access denied. Authentication required.' })
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ message: 'Forbidden. Insufficient permissions.' })
+    }
+
+    return next()
+  }
+}
+
+module.exports = { protect, authorize }

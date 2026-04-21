@@ -1,21 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, NavLink } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { NavLink, useNavigate } from 'react-router-dom'
 import {
   Bell,
-  ChevronLeft,
-  ChevronRight,
-  LayoutDashboard,
-  GraduationCap,
   BookOpen,
-  Users,
   CalendarDays,
-  Megaphone,
+  GraduationCap,
+  LayoutDashboard,
   LogOut,
-  AlertTriangle
+  Megaphone,
+  Users
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import RoleSpecificView from '../components/RoleSpecificView'
-import { getAnnouncements } from '../services/auth.service'
 
 const navItemsByRole = {
   ADMIN: [
@@ -44,35 +39,12 @@ const navItemsByRole = {
   ]
 }
 
-export default function Dashboard() {
+export default function DashboardShell({ title, subtitle, children }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const [collapsed, setCollapsed] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
-  const [emergencyBanner, setEmergencyBanner] = useState('')
 
-  useEffect(() => {
-    const localBanner = localStorage.getItem('globalEmergencyBanner')
-    if (localBanner) {
-      setEmergencyBanner(localBanner)
-      return
-    }
-
-    const loadEmergencyBanner = async () => {
-      try {
-        const response = await getAnnouncements()
-        const items = response.data?.data || []
-        const emergency = items.find((item) => String(item.title || '').toUpperCase().includes('[EMERGENCY]'))
-        if (emergency) {
-          setEmergencyBanner(emergency.content)
-        }
-      } catch (_error) {
-        setEmergencyBanner('')
-      }
-    }
-
-    loadEmergencyBanner()
-  }, [])
+  const navItems = navItemsByRole[user?.role] || navItemsByRole.STUDENT
 
   const initials = useMemo(() => {
     return user?.name
@@ -83,8 +55,6 @@ export default function Dashboard() {
       .slice(0, 2) || 'U'
   }, [user?.name])
 
-  const navItems = navItemsByRole[user?.role] || navItemsByRole.STUDENT
-
   const handleLogout = () => {
     logout()
     navigate('/login')
@@ -93,28 +63,17 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
       <div className="flex min-h-screen">
-        <aside
-          className={`hidden md:flex md:flex-col border-r border-slate-200 bg-white shadow-sm transition-all duration-300 ${collapsed ? 'w-20' : 'w-72'}`}
-        >
-          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4">
+        <aside className="hidden w-72 border-r border-slate-200 bg-white shadow-sm md:flex md:flex-col">
+          <div className="flex items-center border-b border-slate-200 px-4 py-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-600 text-white font-bold">
                 PS
               </div>
-              {!collapsed && (
-                <div>
-                  <p className="font-semibold leading-none">Private School</p>
-                  <p className="text-xs text-slate-500">ERP Platform</p>
-                </div>
-              )}
+              <div>
+                <p className="font-semibold leading-none">Private School</p>
+                <p className="text-xs text-slate-500">ERP Platform</p>
+              </div>
             </div>
-            <button
-              onClick={() => setCollapsed((prev) => !prev)}
-              className="rounded-md border border-slate-200 p-1.5 text-slate-600 hover:bg-slate-100"
-              type="button"
-            >
-              {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-            </button>
           </div>
 
           <nav className="flex-1 space-y-1 p-3">
@@ -133,7 +92,7 @@ export default function Dashboard() {
                   }
                 >
                   <Icon size={18} />
-                  {!collapsed && <span>{item.label}</span>}
+                  <span>{item.label}</span>
                 </NavLink>
               )
             })}
@@ -141,29 +100,16 @@ export default function Dashboard() {
         </aside>
 
         <div className="flex min-h-screen flex-1 flex-col">
-          {emergencyBanner ? (
-            <div className="border-b border-rose-300 bg-rose-50 px-4 py-2 text-rose-800 md:px-6">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <AlertTriangle size={16} />
-                Emergency Broadcast: {emergencyBanner}
-              </div>
-            </div>
-          ) : null}
-
-          <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur px-4 py-3 md:px-6">
+          <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur md:px-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h1 className="text-lg font-semibold">Role Dashboard</h1>
-                <p className="text-xs text-slate-500">Signed in as {user?.role || 'USER'}</p>
+                <h1 className="text-lg font-semibold">{title}</h1>
+                <p className="text-xs text-slate-500">{subtitle || `Signed in as ${user?.role || 'USER'}`}</p>
               </div>
 
               <div className="flex items-center gap-2 md:gap-3">
-                <button
-                  type="button"
-                  className="relative rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-100"
-                >
+                <button type="button" className="relative rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-100">
                   <Bell size={18} />
-                  <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-rose-500" />
                 </button>
 
                 <div className="relative">
@@ -200,7 +146,7 @@ export default function Dashboard() {
           </header>
 
           <main className="flex-1 p-4 md:p-6">
-            <RoleSpecificView />
+            {children}
           </main>
         </div>
       </div>

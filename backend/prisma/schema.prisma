@@ -14,11 +14,213 @@ enum Role {
   STUDENT
 }
 
+enum ClassLevel {
+  PRIMARY
+  SECONDARY
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+}
+
+enum NotificationType {
+  GRADE
+  ABSENCE
+  ANNOUNCEMENT
+  MESSAGE
+  SYSTEM
+}
+
 model User {
+  id               Int            @id @default(autoincrement())
+  name             String
+  email            String         @unique
+  password         String
+  role             Role           @default(STUDENT)
+  parentLinks      ParentStudent[] @relation("ParentLinkParent")
+  sentMessages     Message[]      @relation("MessageSender")
+  receivedMessages Message[]      @relation("MessageRecipient")
+  notifications    Notification[]
+  announcements    Announcement[] @relation("AnnouncementAuthor")
+  authoredGrades   Grade[]        @relation("TeacherGrades")
+  attendancesTaken Attendance[]   @relation("AttendanceRecorder")
+  courses          Course[]       @relation("CourseTeacher")
+  auditLogs        AuditLog[]     @relation("AuditActor")
+  createdAt        DateTime       @default(now())
+}
+
+model AcademicYear {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean  @default(false)
+  classes   Class[]
+  createdAt DateTime @default(now())
+}
+
+model Teacher {
   id        Int      @id @default(autoincrement())
   name      String
   email     String   @unique
-  password  String
-  role      Role     @default(STUDENT)
+  subject   String
+  classes   Class[]
   createdAt DateTime @default(now())
+}
+
+model Student {
+  id          Int             @id @default(autoincrement())
+  name        String
+  email       String          @unique
+  grade       String
+  classes     Class[]
+  parentLinks ParentStudent[]
+  grades      Grade[]
+  attendances Attendance[]
+  submissions Submission[]
+  createdAt   DateTime        @default(now())
+}
+
+model Class {
+  id             Int           @id @default(autoincrement())
+  name           String
+  room           String
+  level          ClassLevel    @default(PRIMARY)
+  teacherId      Int
+  teacher        Teacher       @relation(fields: [teacherId], references: [id])
+  academicYearId Int?
+  academicYear   AcademicYear? @relation(fields: [academicYearId], references: [id])
+  students       Student[]
+  courses        Course[]
+  createdAt      DateTime      @default(now())
+}
+
+model ParentStudent {
+  id        Int      @id @default(autoincrement())
+  parentId  Int
+  studentId Int
+  parent    User     @relation("ParentLinkParent", fields: [parentId], references: [id])
+  student   Student  @relation(fields: [studentId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([parentId, studentId])
+}
+
+model Grade {
+  id         Int      @id @default(autoincrement())
+  studentId  Int
+  teacherId  Int?
+  subject    String
+  score      Float
+  maxScore   Float    @default(20)
+  comments   String?
+  recordedAt DateTime @default(now())
+  student    Student  @relation(fields: [studentId], references: [id])
+  teacher    User?    @relation("TeacherGrades", fields: [teacherId], references: [id])
+}
+
+model Attendance {
+  id            Int              @id @default(autoincrement())
+  studentId     Int
+  date          DateTime
+  status        AttendanceStatus
+  justification String?
+  takenById     Int?
+  createdAt     DateTime         @default(now())
+  student       Student          @relation(fields: [studentId], references: [id])
+  takenBy       User?            @relation("AttendanceRecorder", fields: [takenById], references: [id])
+
+  @@unique([studentId, date])
+}
+
+model Course {
+  id          Int              @id @default(autoincrement())
+  title       String
+  description String?
+  classId     Int?
+  teacherId   Int?
+  class       Class?           @relation(fields: [classId], references: [id])
+  teacher     User?            @relation("CourseTeacher", fields: [teacherId], references: [id])
+  materials   CourseMaterial[]
+  assignments Assignment[]
+  createdAt   DateTime         @default(now())
+}
+
+model CourseMaterial {
+  id        Int      @id @default(autoincrement())
+  courseId  Int
+  title     String
+  fileUrl   String
+  createdAt DateTime @default(now())
+  course    Course   @relation(fields: [courseId], references: [id])
+}
+
+model Assignment {
+  id          Int          @id @default(autoincrement())
+  courseId    Int
+  title       String
+  description String?
+  dueDate     DateTime
+  createdAt   DateTime     @default(now())
+  course      Course       @relation(fields: [courseId], references: [id])
+  submissions Submission[]
+}
+
+model Submission {
+  id           Int        @id @default(autoincrement())
+  assignmentId Int
+  studentId    Int
+  content      String?
+  fileUrl      String?
+  submittedAt  DateTime   @default(now())
+  grade        Float?
+  feedback     String?
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+  student      Student    @relation(fields: [studentId], references: [id])
+
+  @@unique([assignmentId, studentId])
+}
+
+model Announcement {
+  id          Int      @id @default(autoincrement())
+  title       String
+  content     String
+  createdById Int?
+  createdAt   DateTime @default(now())
+  createdBy   User?    @relation("AnnouncementAuthor", fields: [createdById], references: [id])
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  recipientId Int
+  content    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  sender     User     @relation("MessageSender", fields: [senderId], references: [id])
+  recipient  User     @relation("MessageRecipient", fields: [recipientId], references: [id])
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  type      NotificationType
+  message   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id])
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  actorId    Int?
+  action     String
+  entityType String
+  entityId   String?
+  before     Json?
+  after      Json?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id])
 }

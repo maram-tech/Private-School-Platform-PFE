@@ -12,6 +12,7 @@ export default function Register() {
     email: '',
     password: '',
     confirmPassword: '',
+    role: '',
   })
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
@@ -28,6 +29,7 @@ export default function Register() {
     const errors = {}
     if (!form.name.trim()) errors.name = 'Full name is required'
     if (!form.email.trim()) errors.email = 'Email is required'
+    if (!form.role) errors.role = 'Please select a role'
     if (form.password.length < 6) errors.password = 'Password must be at least 6 characters'
     if (form.password !== form.confirmPassword)
       errors.confirmPassword = 'Passwords do not match'
@@ -63,7 +65,7 @@ export default function Register() {
         <h2 className="banner-title">Join EduManage Today</h2>
         <p className="banner-subtitle">
           Create your account and start managing your academic journey with clarity and ease.
-          Your role will be assigned by the administrator.
+          Select your role to get the right experience from the first login.
         </p>
         <div className="banner-stats">
           <div className="stat-item">
@@ -105,7 +107,7 @@ export default function Register() {
             alignItems: 'center'
           }}>
             <span>ℹ️</span>
-            Your account role will be assigned by the administrator after registration.
+            Please select whether you are registering as a student, teacher, or parent.
           </div>
 
           {error && (
@@ -152,6 +154,26 @@ export default function Register() {
                 <span className="input-icon">✉</span>
               </div>
               {fieldErrors.email && <p className="field-error">⚠ {fieldErrors.email}</p>}
+            </div>
+
+            {/* Role */}
+            <div className="form-group">
+              <label className="form-label" htmlFor="reg-role">Register As</label>
+              <div className="input-wrapper">
+                <select
+                  id="reg-role"
+                  className={`form-input ${fieldErrors.role ? 'has-error' : ''}`}
+                  name="role"
+                  value={form.role}
+                  onChange={handleChange}
+                >
+                  <option value="">Select your role</option>
+                  <option value="STUDENT">Student</option>
+                  <option value="TEACHER">Teacher</option>
+                  <option value="PARENT">Parent</option>
+                </select>
+              </div>
+              {fieldErrors.role && <p className="field-error">⚠ {fieldErrors.role}</p>}
             </div>
 
             {/* Password */}

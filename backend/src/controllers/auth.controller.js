@@ -2,11 +2,17 @@ const bcrypt    = require('bcryptjs')
 const jwt       = require('jsonwebtoken')
 const prisma    = require('../prisma')
 
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_jwt_secret_change_me'
+
+const isPrismaInitError = (error) => {
+  return error?.name === 'PrismaClientInitializationError' || ['P1000', 'P1001'].includes(error?.code)
+}
+
 // Helper to generate a JWT token
 const generateToken = (user) => {
   return jwt.sign(
     { id: user.id, email: user.email, role: user.role },
-    process.env.JWT_SECRET,
+    JWT_SECRET,
     { expiresIn: '7d' }
   )
 }
@@ -16,12 +22,17 @@ const generateToken = (user) => {
 // ─────────────────────────────────────────────
 const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body
+    const { name, email, password, role } = req.body
 
     // 1. Validate fields
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'All fields are required.' })
     }
+
+    if (!role || !['STUDENT', 'TEACHER', 'PARENT'].includes(role)) {
+      return res.status(400).json({ message: 'Please select either STUDENT, TEACHER, or PARENT role.' })
+    }
+
     if (password.length < 6) {
       return res.status(400).json({ message: 'Password must be at least 6 characters.' })
     }
@@ -35,9 +46,9 @@ const register = async (req, res) => {
     // 3. Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // 4. Create user (role defaults to STUDENT — admin changes it later)
+    // 4. Create user with selected role
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword },
+      data: { name, email, password: hashedPassword, role },
       select: { id: true, name: true, email: true, role: true, createdAt: true }
     })
 
@@ -47,6 +58,11 @@ const register = async (req, res) => {
 
   } catch (error) {
     console.error('Register error:', error)
+    if (isPrismaInitError(error)) {
+      return res.status(503).json({
+        message: 'Database connection failed. Check DATABASE_URL credentials and restart backend.'
+      })
+    }
     return res.status(500).json({ message: 'Server error. Please try again.' })
   }
 }
@@ -56,17 +72,30 @@ const register = async (req, res) => {
 // ─────────────────────────────────────────────
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body
+    const { email, password, role } = req.body
 
     // 1. Validate
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required.' })
     }
 
+    if (role !== undefined && !['STUDENT', 'TEACHER', 'PARENT'].includes(role)) {
+      return res.status(400).json({ message: 'Role must be either STUDENT, TEACHER, or PARENT.' })
+    }
+
     // 2. Find user
     const user = await prisma.user.findUnique({ where: { email } })
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password.' })
+    }
+
+    // Student/Teacher/Parent accounts must login with explicit role selection.
+    if (['STUDENT', 'TEACHER', 'PARENT'].includes(user.role) && !role) {
+      return res.status(400).json({ message: 'Please select your role to login.' })
+    }
+
+    if (role && user.role !== role) {
+      return res.status(403).json({ message: 'Selected role does not match your account role.' })
     }
 
     // 3. Compare password
@@ -82,6 +111,11 @@ const login = async (req, res) => {
 
   } catch (error) {
     console.error('Login error:', error)
+    if (isPrismaInitError(error)) {
+      return res.status(503).json({
+        message: 'Database connection failed. Check DATABASE_URL credentials and restart backend.'
+      })
+    }
     return res.status(500).json({ message: 'Server error. Please try again.' })
   }
 }
@@ -99,8 +133,22 @@ const getMe = async (req, res) => {
     return res.status(200).json({ user })
   } catch (error) {
     console.error('GetMe error:', error)
+    if (isPrismaInitError(error)) {
+      return res.status(503).json({
+        message: 'Database connection failed. Check DATABASE_URL credentials and restart backend.'
+      })
+    }
     return res.status(500).json({ message: 'Server error.' })
   }
 }
 
-module.exports = { register, login, getMe }
+// ─────────────────────────────────────────────
+// POST /api/auth/logout (protected)
+// ─────────────────────────────────────────────
+const logout = async (_req, res) => {
+  return res.status(200).json({
+    message: 'Logged out successfully. Remove token on client side.'
+  })
+}
+
+module.exports = { register, login, getMe, logout }

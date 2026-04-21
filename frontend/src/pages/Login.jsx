@@ -7,7 +7,7 @@ export default function Login() {
   const navigate = useNavigate()
   const { login } = useAuth()
 
-  const [form, setForm] = useState({ email: '', password: '' })
+  const [form, setForm] = useState({ email: '', password: '', role: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -19,7 +19,7 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.email || !form.password) {
+    if (!form.email || !form.password || !form.role) {
       setError('Please fill in all fields.')
       return
     }
@@ -120,6 +120,25 @@ export default function Login() {
                 >
                   {showPassword ? '🙈' : '👁'}
                 </button>
+              </div>
+            </div>
+
+            {/* Role */}
+            <div className="form-group">
+              <label className="form-label" htmlFor="role">Login As</label>
+              <div className="input-wrapper">
+                <select
+                  id="role"
+                  className="form-input"
+                  name="role"
+                  value={form.role}
+                  onChange={handleChange}
+                >
+                  <option value="">Select your role</option>
+                  <option value="STUDENT">Student</option>
+                  <option value="TEACHER">Teacher</option>
+                  <option value="PARENT">Parent</option>
+                </select>
               </div>
             </div>
 

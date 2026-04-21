@@ -4,7 +4,11 @@
   "description": "",
   "main": "src/app.js",
   "scripts": {
+    "postinstall": "prisma generate",
+    "prisma:generate": "prisma generate",
+    "prestart": "npm run prisma:generate",
     "start": "node src/app.js",
+    "predev": "npm run prisma:generate",
     "dev": "nodemon src/app.js"
   },
   "keywords": [],
