@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import Profile   from './pages/Profile'
 import Students  from './pages/Students'
 import Teachers  from './pages/Teachers'
+import Parents   from './pages/Parents'
 import Classes   from './pages/Classes'
 import Users     from './pages/Users'
 import AcademicYears from './pages/AcademicYears'
@@ -44,6 +45,11 @@ export default function App() {
         <Route path="/teachers" element={
           <ProtectedRoute allowedRoles={['ADMIN']}>
             <Teachers />
+          </ProtectedRoute>
+        } />
+        <Route path="/parents" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <Parents />
           </ProtectedRoute>
         } />
         <Route path="/classes" element={

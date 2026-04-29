@@ -1,50 +1,15 @@
 import { useMemo, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import {
-  Bell,
-  BookOpen,
-  CalendarDays,
-  GraduationCap,
-  LayoutDashboard,
-  LogOut,
-  Megaphone,
-  Users
-} from 'lucide-react'
+import { Bell, LogOut } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-
-const navItemsByRole = {
-  ADMIN: [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { label: 'Users', icon: Users, path: '/users' },
-    { label: 'Academic Years', icon: CalendarDays, path: '/academic-years' },
-    { label: 'Announcements', icon: Megaphone, path: '/announcements' }
-  ],
-  TEACHER: [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { label: 'Students', icon: GraduationCap, path: '/students' },
-    { label: 'Classes', icon: BookOpen, path: '/classes' },
-    { label: 'Announcements', icon: Megaphone, path: '/announcements' }
-  ],
-  STUDENT: [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { label: 'Courses', icon: BookOpen, path: '/courses' },
-    { label: 'Classes', icon: GraduationCap, path: '/classes' },
-    { label: 'Announcements', icon: Megaphone, path: '/announcements' }
-  ],
-  PARENT: [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { label: 'Grades', icon: GraduationCap, path: '/grades' },
-    { label: 'Attendance', icon: CalendarDays, path: '/attendance' },
-    { label: 'Announcements', icon: Megaphone, path: '/announcements' }
-  ]
-}
+import { navigationItemsByRole } from '../config/roleAccess'
 
 export default function DashboardShell({ title, subtitle, children }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [profileOpen, setProfileOpen] = useState(false)
 
-  const navItems = navItemsByRole[user?.role] || navItemsByRole.STUDENT
+  const navItems = navigationItemsByRole[user?.role] || navigationItemsByRole.STUDENT
 
   const initials = useMemo(() => {
     return user?.name

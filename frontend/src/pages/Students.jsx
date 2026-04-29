@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getAllStudents } from '../services/auth.service'
+import { getAllUsers } from '../services/auth.service'
 import DashboardShell from '../components/DashboardShell'
 
 export default function Students() {
@@ -9,8 +9,9 @@ export default function Students() {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const res = await getAllStudents()
-        setStudents(res.data.data || [])
+        const res = await getAllUsers()
+        const accounts = res.data.users || []
+        setStudents(accounts.filter((user) => user.role === 'STUDENT'))
       } catch (error) {
         console.error('Error fetching students:', error)
         setStudents([])
@@ -35,7 +36,8 @@ export default function Students() {
                   <tr>
                     <th>Name</th>
                     <th>Email</th>
-                    <th>Grade</th>
+                    <th>Role</th>
+                    <th>Created At</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -43,7 +45,8 @@ export default function Students() {
                     <tr key={student.id}>
                       <td>{student.name}</td>
                       <td>{student.email}</td>
-                      <td>{student.grade}</td>
+                      <td>{student.role}</td>
+                      <td>{new Date(student.createdAt).toLocaleDateString()}</td>
                     </tr>
                   ))}
                 </tbody>

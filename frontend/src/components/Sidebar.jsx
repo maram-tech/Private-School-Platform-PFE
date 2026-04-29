@@ -15,7 +15,12 @@ export default function Sidebar() {
             to={item.path}
             className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
           >
-            <span className="sidebar-icon">{item.icon}</span>
+            <span className="sidebar-icon">
+              {typeof item.icon === 'function' ? (() => {
+                const Icon = item.icon
+                return <Icon size={16} />
+              })() : item.icon}
+            </span>
             <span className="sidebar-label">{item.label}</span>
           </NavLink>
         ))}

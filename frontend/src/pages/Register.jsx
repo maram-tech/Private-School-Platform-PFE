@@ -107,7 +107,7 @@ export default function Register() {
             alignItems: 'center'
           }}>
             <span>ℹ️</span>
-            Please select whether you are registering as a student, teacher, or parent.
+            Please select whether you are registering as an admin, student, teacher, or parent.
           </div>
 
           {error && (
@@ -171,6 +171,7 @@ export default function Register() {
                   <option value="STUDENT">Student</option>
                   <option value="TEACHER">Teacher</option>
                   <option value="PARENT">Parent</option>
+                  <option value="ADMIN">Admin</option>
                 </select>
               </div>
               {fieldErrors.role && <p className="field-error">⚠ {fieldErrors.role}</p>}

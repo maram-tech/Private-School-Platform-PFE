@@ -3,6 +3,7 @@ const jwt       = require('jsonwebtoken')
 const prisma    = require('../prisma')
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_jwt_secret_change_me'
+const ALLOWED_ROLES = ['ADMIN', 'STUDENT', 'TEACHER', 'PARENT']
 
 const isPrismaInitError = (error) => {
   return error?.name === 'PrismaClientInitializationError' || ['P1000', 'P1001'].includes(error?.code)
@@ -29,8 +30,8 @@ const register = async (req, res) => {
       return res.status(400).json({ message: 'All fields are required.' })
     }
 
-    if (!role || !['STUDENT', 'TEACHER', 'PARENT'].includes(role)) {
-      return res.status(400).json({ message: 'Please select either STUDENT, TEACHER, or PARENT role.' })
+    if (!role || !ALLOWED_ROLES.includes(role)) {
+      return res.status(400).json({ message: 'Please select a valid role: ADMIN, STUDENT, TEACHER, or PARENT.' })
     }
 
     if (password.length < 6) {
@@ -79,8 +80,8 @@ const login = async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required.' })
     }
 
-    if (role !== undefined && !['STUDENT', 'TEACHER', 'PARENT'].includes(role)) {
-      return res.status(400).json({ message: 'Role must be either STUDENT, TEACHER, or PARENT.' })
+    if (role !== undefined && !ALLOWED_ROLES.includes(role)) {
+      return res.status(400).json({ message: 'Role must be one of: ADMIN, STUDENT, TEACHER, or PARENT.' })
     }
 
     // 2. Find user
@@ -89,8 +90,8 @@ const login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password.' })
     }
 
-    // Student/Teacher/Parent accounts must login with explicit role selection.
-    if (['STUDENT', 'TEACHER', 'PARENT'].includes(user.role) && !role) {
+    // Non-admin accounts must login with explicit role selection.
+    if (user.role !== 'ADMIN' && !role) {
       return res.status(400).json({ message: 'Please select your role to login.' })
     }
 

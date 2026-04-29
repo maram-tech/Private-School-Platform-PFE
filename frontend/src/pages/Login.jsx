@@ -43,7 +43,7 @@ export default function Login() {
         <div className="banner-icon">🎓</div>
         <h2 className="banner-title">Welcome Back to EduManage</h2>
         <p className="banner-subtitle">
-          Your all-in-one school management platform for teachers, parents, and students.
+          Your all-in-one school management platform for admins, teachers, parents, and students.
         </p>
         <div className="banner-stats">
           <div className="stat-item">
@@ -138,6 +138,7 @@ export default function Login() {
                   <option value="STUDENT">Student</option>
                   <option value="TEACHER">Teacher</option>
                   <option value="PARENT">Parent</option>
+                  <option value="ADMIN">Admin</option>
                 </select>
               </div>
             </div>

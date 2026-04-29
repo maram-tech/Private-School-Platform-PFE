@@ -4,45 +4,13 @@ import {
   Bell,
   ChevronLeft,
   ChevronRight,
-  LayoutDashboard,
-  GraduationCap,
-  BookOpen,
-  Users,
-  CalendarDays,
-  Megaphone,
   LogOut,
   AlertTriangle
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import RoleSpecificView from '../components/RoleSpecificView'
+import { navigationItemsByRole } from '../config/roleAccess'
 import { getAnnouncements } from '../services/auth.service'
-
-const navItemsByRole = {
-  ADMIN: [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { label: 'Users', icon: Users, path: '/users' },
-    { label: 'Academic Years', icon: CalendarDays, path: '/academic-years' },
-    { label: 'Announcements', icon: Megaphone, path: '/announcements' }
-  ],
-  TEACHER: [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { label: 'Students', icon: GraduationCap, path: '/students' },
-    { label: 'Classes', icon: BookOpen, path: '/classes' },
-    { label: 'Announcements', icon: Megaphone, path: '/announcements' }
-  ],
-  STUDENT: [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { label: 'Courses', icon: BookOpen, path: '/courses' },
-    { label: 'Classes', icon: GraduationCap, path: '/classes' },
-    { label: 'Announcements', icon: Megaphone, path: '/announcements' }
-  ],
-  PARENT: [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { label: 'Grades', icon: GraduationCap, path: '/grades' },
-    { label: 'Attendance', icon: CalendarDays, path: '/attendance' },
-    { label: 'Announcements', icon: Megaphone, path: '/announcements' }
-  ]
-}
 
 export default function Dashboard() {
   const { user, logout } = useAuth()
@@ -83,7 +51,7 @@ export default function Dashboard() {
       .slice(0, 2) || 'U'
   }, [user?.name])
 
-  const navItems = navItemsByRole[user?.role] || navItemsByRole.STUDENT
+  const navItems = navigationItemsByRole[user?.role] || navigationItemsByRole.STUDENT
 
   const handleLogout = () => {
     logout()
