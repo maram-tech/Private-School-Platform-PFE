@@ -3,7 +3,7 @@ const prisma = require('../prisma')
 exports.getAllTeachers = async (req, res) => {
   try {
     const teachers = await prisma.teacher.findMany({
-      select: { id: true, name: true, email: true, subject: true }
+      select: { id: true, userId: true, name: true, email: true, subject: true }
     })
     res.json({ success: true, data: teachers })
   } catch (error) {
@@ -26,13 +26,56 @@ exports.getTeacherById = async (req, res) => {
 
 exports.createTeacher = async (req, res) => {
   try {
-    const { name, email, subject } = req.body
-    if (!name || !email || !subject) {
-      return res.status(400).json({ message: 'Please provide name, email, and subject.' })
+    const { userId, name, email, subject } = req.body
+    const parsedUserId = Number.parseInt(userId, 10)
+
+    if (!subject || !String(subject).trim()) {
+      return res.status(400).json({ message: 'Please provide subject.' })
     }
-    const teacher = await prisma.teacher.create({
-      data: { name, email, subject }
+
+    let user = null
+    if (Number.isInteger(parsedUserId) && parsedUserId > 0) {
+      user = await prisma.user.findUnique({
+        where: { id: parsedUserId },
+        select: { id: true, name: true, email: true, role: true }
+      })
+    } else if (email && String(email).trim()) {
+      user = await prisma.user.findUnique({
+        where: { email: String(email).trim() },
+        select: { id: true, name: true, email: true, role: true }
+      })
+    }
+
+    if (!user || user.role !== 'TEACHER') {
+      return res.status(400).json({ message: 'Please provide userId or email for an existing TEACHER account.' })
+    }
+
+    const existingProfile = await prisma.teacher.findUnique({ where: { userId: user.id } })
+    if (existingProfile) {
+      return res.status(409).json({ message: 'This TEACHER account already has a teacher profile.' })
+    }
+
+    const finalName = name && String(name).trim() ? String(name).trim() : user.name
+    const finalSubject = String(subject).trim()
+
+    const teacher = await prisma.$transaction(async (tx) => {
+      if (finalName !== user.name) {
+        await tx.user.update({
+          where: { id: user.id },
+          data: { name: finalName }
+        })
+      }
+
+      return tx.teacher.create({
+        data: {
+          userId: user.id,
+          name: finalName,
+          email: user.email,
+          subject: finalSubject
+        }
+      })
     })
+
     res.status(201).json({ success: true, data: teacher, message: 'Teacher created.' })
   } catch (error) {
     res.status(500).json({ message: 'Error creating teacher.', error: error.message })

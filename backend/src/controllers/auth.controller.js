@@ -47,10 +47,36 @@ const register = async (req, res) => {
     // 3. Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // 4. Create user with selected role
-    const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, role },
-      select: { id: true, name: true, email: true, role: true, createdAt: true }
+    // 4. Create user and matching role profile when needed
+    const user = await prisma.$transaction(async (tx) => {
+      const createdUser = await tx.user.create({
+        data: { name, email, password: hashedPassword, role },
+        select: { id: true, name: true, email: true, role: true, createdAt: true }
+      })
+
+      if (role === 'STUDENT') {
+        await tx.student.create({
+          data: {
+            userId: createdUser.id,
+            name: createdUser.name,
+            email: createdUser.email,
+            grade: 'N/A'
+          }
+        })
+      }
+
+      if (role === 'TEACHER') {
+        await tx.teacher.create({
+          data: {
+            userId: createdUser.id,
+            name: createdUser.name,
+            email: createdUser.email,
+            subject: 'General'
+          }
+        })
+      }
+
+      return createdUser
     })
 
     // 5. Generate token and respond
@@ -73,30 +99,17 @@ const register = async (req, res) => {
 // ─────────────────────────────────────────────
 const login = async (req, res) => {
   try {
-    const { email, password, role } = req.body
+    const { email, password } = req.body
 
     // 1. Validate
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required.' })
     }
 
-    if (role !== undefined && !ALLOWED_ROLES.includes(role)) {
-      return res.status(400).json({ message: 'Role must be one of: ADMIN, STUDENT, TEACHER, or PARENT.' })
-    }
-
     // 2. Find user
     const user = await prisma.user.findUnique({ where: { email } })
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password.' })
-    }
-
-    // Non-admin accounts must login with explicit role selection.
-    if (user.role !== 'ADMIN' && !role) {
-      return res.status(400).json({ message: 'Please select your role to login.' })
-    }
-
-    if (role && user.role !== role) {
-      return res.status(403).json({ message: 'Selected role does not match your account role.' })
     }
 
     // 3. Compare password
@@ -152,4 +165,48 @@ const logout = async (_req, res) => {
   })
 }
 
-module.exports = { register, login, getMe, logout }
+// ─────────────────────────────────────────────
+// POST /api/auth/change-password-first-login (protected)
+// ─────────────────────────────────────────────
+const changePasswordFirstLogin = async (req, res) => {
+  try {
+    const { newPassword } = req.body
+
+    if (!newPassword || String(newPassword).length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters.' })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { id: true, role: true }
+    })
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' })
+    }
+
+    if (user.role !== 'PARENT') {
+      return res.status(403).json({ message: 'Only parents can use this endpoint.' })
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10)
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword }
+    })
+
+    return res.status(200).json({
+      message: 'Password changed successfully.'
+    })
+  } catch (error) {
+    console.error('Change password first login error:', error)
+    if (isPrismaInitError(error)) {
+      return res.status(503).json({
+        message: 'Database connection failed. Check DATABASE_URL credentials and restart backend.'
+      })
+    }
+    return res.status(500).json({ message: 'Server error. Please try again.' })
+  }
+}
+
+module.exports = { register, login, getMe, logout, changePasswordFirstLogin }

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login     from './pages/Login'
-import Register  from './pages/Register'
+// Signup is disabled for public access; admins provision accounts from the Users page.
+// import Register  from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Profile   from './pages/Profile'
 import Students  from './pages/Students'
@@ -13,6 +14,9 @@ import Grades    from './pages/Grades'
 import Attendance from './pages/Attendance'
 import Courses   from './pages/Courses'
 import Assignments from './pages/Assignments'
+import TeachingAssignments from './pages/TeachingAssignments'
+import Subjects from './pages/Subjects'
+import Reports  from './pages/Reports'
 import Announcements from './pages/Announcements'
 import Messages  from './pages/Messages'
 import Notifications from './pages/Notifications'
@@ -24,7 +28,6 @@ export default function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/login"    element={<Login />} />
-        <Route path="/register" element={<Register />} />
 
         {/* Protected routes */}
         <Route path="/dashboard" element={
@@ -37,9 +40,11 @@ export default function App() {
             <Profile />
           </ProtectedRoute>
         } />
-        <Route path="/students" element={
-          <ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}>
-            <Students />
+
+        {/* Admin */}
+        <Route path="/users" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <Users />
           </ProtectedRoute>
         } />
         <Route path="/teachers" element={
@@ -52,19 +57,36 @@ export default function App() {
             <Parents />
           </ProtectedRoute>
         } />
-        <Route path="/classes" element={
-          <ProtectedRoute allowedRoles={['ADMIN', 'TEACHER', 'STUDENT']}>
-            <Classes />
-          </ProtectedRoute>
-        } />
-        <Route path="/users" element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <Users />
-          </ProtectedRoute>
-        } />
         <Route path="/academic-years" element={
           <ProtectedRoute allowedRoles={['ADMIN']}>
             <AcademicYears />
+          </ProtectedRoute>
+        } />
+        <Route path="/teaching-assignments" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <TeachingAssignments />
+          </ProtectedRoute>
+        } />
+        <Route path="/subjects" element={
+          <ProtectedRoute allowedRoles={['ADMIN', 'TEACHER', 'PARENT', 'STUDENT']}>
+            <Subjects />
+          </ProtectedRoute>
+        } />
+        <Route path="/reports" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <Reports />
+          </ProtectedRoute>
+        } />
+
+        {/* Shared role pages */}
+        <Route path="/students" element={
+          <ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}>
+            <Students />
+          </ProtectedRoute>
+        } />
+        <Route path="/classes" element={
+          <ProtectedRoute allowedRoles={['ADMIN', 'TEACHER', 'STUDENT']}>
+            <Classes />
           </ProtectedRoute>
         } />
         <Route path="/grades" element={
@@ -78,12 +100,12 @@ export default function App() {
           </ProtectedRoute>
         } />
         <Route path="/courses" element={
-          <ProtectedRoute allowedRoles={['ADMIN', 'TEACHER', 'STUDENT']}>
+          <ProtectedRoute allowedRoles={['ADMIN', 'TEACHER', 'STUDENT', 'PARENT']}>
             <Courses />
           </ProtectedRoute>
         } />
         <Route path="/assignments" element={
-          <ProtectedRoute allowedRoles={['ADMIN', 'TEACHER', 'STUDENT']}>
+          <ProtectedRoute allowedRoles={['ADMIN', 'TEACHER', 'STUDENT', 'PARENT']}>
             <Assignments />
           </ProtectedRoute>
         } />

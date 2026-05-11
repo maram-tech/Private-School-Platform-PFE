@@ -1,10 +1,10 @@
 const express  = require('express')
 const router   = express.Router()
 const { register, login, getMe, logout } = require('../controllers/auth.controller')
-const { protect } = require('../middlewares/auth.middleware')
+const { protect, authorize } = require('../middlewares/auth.middleware')
 
-// Public routes
-router.post('/register', register)
+// Admin-only account provisioning
+router.post('/register', protect, authorize('ADMIN'), register)
 router.post('/login',    login)
 
 // Protected route

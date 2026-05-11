@@ -11,7 +11,7 @@ exports.getMyChildren = async (req, res) => {
       include: {
         student: {
           include: {
-            classes: { select: { id: true, name: true, room: true } },
+            class: { select: { id: true, name: true, room: true } },
             grades: {
               orderBy: { recordedAt: 'desc' },
               take: 5,
@@ -38,7 +38,7 @@ exports.getMyChildren = async (req, res) => {
 exports.getAllStudents = async (req, res) => {
   try {
     const students = await prisma.student.findMany({
-      select: { id: true, name: true, email: true, grade: true }
+      select: { id: true, userId: true, name: true, email: true, grade: true, classId: true }
     })
     res.json({ success: true, data: students })
   } catch (error) {
@@ -52,7 +52,7 @@ exports.getStudentById = async (req, res) => {
     const student = await prisma.student.findUnique({
       where: { id: parseInt(id) },
       include: {
-        classes: { select: { id: true, name: true, room: true } },
+        class: { select: { id: true, name: true, room: true } },
         parentLinks: {
           include: { parent: { select: { id: true, name: true, email: true } } }
         }
@@ -67,13 +67,52 @@ exports.getStudentById = async (req, res) => {
 
 exports.createStudent = async (req, res) => {
   try {
-    const { name, email, grade } = req.body
-    if (!name || !email || !grade) {
-      return res.status(400).json({ message: 'Please provide name, email, and grade.' })
+    const { userId, name, email, grade } = req.body
+    const parsedUserId = Number.parseInt(userId, 10)
+
+    let user = null
+    if (Number.isInteger(parsedUserId) && parsedUserId > 0) {
+      user = await prisma.user.findUnique({
+        where: { id: parsedUserId },
+        select: { id: true, name: true, email: true, role: true }
+      })
+    } else if (email && String(email).trim()) {
+      user = await prisma.user.findUnique({
+        where: { email: String(email).trim() },
+        select: { id: true, name: true, email: true, role: true }
+      })
     }
-    const student = await prisma.student.create({
-      data: { name, email, grade }
+
+    if (!user || user.role !== 'STUDENT') {
+      return res.status(400).json({ message: 'Please provide userId or email for an existing STUDENT account.' })
+    }
+
+    const existingProfile = await prisma.student.findUnique({ where: { userId: user.id } })
+    if (existingProfile) {
+      return res.status(409).json({ message: 'This STUDENT account already has a student profile.' })
+    }
+
+    const finalName = name && String(name).trim() ? String(name).trim() : user.name
+    const finalGrade = grade && String(grade).trim() ? String(grade).trim() : 'N/A'
+
+    const student = await prisma.$transaction(async (tx) => {
+      if (finalName !== user.name) {
+        await tx.user.update({
+          where: { id: user.id },
+          data: { name: finalName }
+        })
+      }
+
+      return tx.student.create({
+        data: {
+          userId: user.id,
+          name: finalName,
+          email: user.email,
+          grade: finalGrade
+        }
+      })
     })
+
     res.status(201).json({ success: true, data: student, message: 'Student created.' })
   } catch (error) {
     res.status(500).json({ message: 'Error creating student.', error: error.message })

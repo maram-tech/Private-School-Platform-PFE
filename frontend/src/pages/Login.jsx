@@ -1,13 +1,15 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { AtSign, Lock } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { loginUser } from '../services/auth.service'
+import signinBgUrl from '../assets/signin-bg.png'
 
 export default function Login() {
   const navigate = useNavigate()
   const { login } = useAuth()
 
-  const [form, setForm] = useState({ email: '', password: '', role: '' })
+  const [form, setForm] = useState({ email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -19,7 +21,7 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.email || !form.password || !form.role) {
+    if (!form.email || !form.password) {
       setError('Please fill in all fields.')
       return
     }
@@ -36,39 +38,41 @@ export default function Login() {
   }
 
   return (
-    <div className="auth-layout">
+    <div className="auth-page">
+      <div className="auth-page-bg" aria-hidden="true">
+        <img src={signinBgUrl} alt="" className="auth-page-bg__img" />
+        <div className="auth-page-bg__shade" />
+      </div>
+      <div className="auth-layout">
+        <div className="auth-banner">
+        <div className="auth-panel">
+          <div className="brand-lockup">
+            <div className="brand-mark">PS</div>
+            <div className="brand-copy">
+              <p className="brand-name">Private School</p>
+              <p className="brand-tag">Management Platform</p>
+            </div>
+          </div>
+          <span className="auth-brand">PRIVATE SCHOOL PLATFORM</span>
+          <h2 className="banner-title">Manage your school with clarity and confidence.</h2>
+          <p className="banner-subtitle">
+            Secure access for administrators, teachers, parents, and students in one professional workspace.
+          </p>
 
-      {/* ── Left Banner ── */}
-      <div className="auth-banner">
-        <div className="banner-icon">🎓</div>
-        <h2 className="banner-title">Welcome Back to EduManage</h2>
-        <p className="banner-subtitle">
-          Your all-in-one school management platform for admins, teachers, parents, and students.
-        </p>
-        <div className="banner-stats">
-          <div className="stat-item">
-            <div className="stat-number">500+</div>
-            <div className="stat-label">Students</div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-number">40+</div>
-            <div className="stat-label">Teachers</div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-number">20+</div>
-            <div className="stat-label">Classes</div>
-          </div>
+          <p className="auth-note">Enterprise-grade privacy and role-based access control.</p>
         </div>
       </div>
 
-      {/* ── Right Form ── */}
       <div className="auth-form-side">
         <div className="auth-card">
-
           <div className="auth-header">
-            <span className="auth-label">Sign In</span>
-            <h1>Log in to your account</h1>
-            <p>Enter your credentials to access the platform</p>
+            <div className="auth-header-top">
+              <h1>Welcome back</h1>
+              <span className="auth-label">Sign In</span>
+            </div>
+            <p className="auth-header-sub">
+              Sign in to access your Private School Management workspace.
+            </p>
           </div>
 
           {error && (
@@ -78,8 +82,6 @@ export default function Login() {
           )}
 
           <form onSubmit={handleSubmit} noValidate>
-
-            {/* Email */}
             <div className="form-group">
               <label className="form-label" htmlFor="email">Email Address</label>
               <div className="input-wrapper">
@@ -88,16 +90,17 @@ export default function Login() {
                   className="form-input"
                   type="email"
                   name="email"
-                  placeholder="you@school.com"
+                  placeholder="admin@school.com"
                   value={form.email}
                   onChange={handleChange}
                   autoComplete="email"
                 />
-                <span className="input-icon">✉</span>
+                <span className="input-icon input-icon-svg" aria-hidden>
+                  <AtSign size={18} strokeWidth={2.25} />
+                </span>
               </div>
             </div>
 
-            {/* Password */}
             <div className="form-group">
               <label className="form-label" htmlFor="password">Password</label>
               <div className="input-wrapper">
@@ -111,60 +114,37 @@ export default function Login() {
                   onChange={handleChange}
                   autoComplete="current-password"
                 />
-                <span className="input-icon">🔒</span>
+                <span className="input-icon input-icon-svg" aria-hidden>
+                  <Lock size={18} strokeWidth={2.25} />
+                </span>
                 <button
                   type="button"
                   className="toggle-password"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label="Toggle password visibility"
                 >
-                  {showPassword ? '🙈' : '👁'}
+                  {showPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
             </div>
 
-            {/* Role */}
-            <div className="form-group">
-              <label className="form-label" htmlFor="role">Login As</label>
-              <div className="input-wrapper">
-                <select
-                  id="role"
-                  className="form-input"
-                  name="role"
-                  value={form.role}
-                  onChange={handleChange}
-                >
-                  <option value="">Select your role</option>
-                  <option value="STUDENT">Student</option>
-                  <option value="TEACHER">Teacher</option>
-                  <option value="PARENT">Parent</option>
-                  <option value="ADMIN">Admin</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Submit */}
             <button
               type="submit"
               id="login-submit"
               className="btn btn-primary"
               disabled={loading}
-              style={{ marginTop: '8px' }}
             >
               {loading ? <span className="spinner"></span> : null}
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
-
           </form>
 
           <div className="auth-footer">
-            Don't have an account?{' '}
-            <Link to="/register">Create one →</Link>
+            Contact your school administrator if you cannot access your account.
           </div>
-
         </div>
       </div>
-
+      </div>
     </div>
   )
 }
